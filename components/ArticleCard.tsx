@@ -1,6 +1,8 @@
 import { Badge } from "@/components/ui/badge";
-import { Check, Trash2, Clock, RotateCcw, Play } from "lucide-react";
+import { Check, Trash2, Clock, RotateCcw, Play, Edit2 } from "lucide-react";
 import { useLibrary } from "./LibraryContext";
+import { useState } from "react";
+import { EditArticleDialog } from "./EditArticleDialog";
 
 export type ArticleTier = 'tier1' | 'tier2' | 'tier3' | 'xpost';
 
@@ -39,6 +41,7 @@ export interface Article {
   cachedOEmbed?: XOEmbedData;
   ogImage?: string;
   ogDescription?: string;
+  tags?: string[];
 }
 
 const getCoverTheme = (str: string) => {
@@ -75,6 +78,7 @@ const getCoverTheme = (str: string) => {
 
 export function ArticleCard({ article, onSelect }: { article: Article; onSelect?: (article: Article) => void }) {
   const { updateArticle, deleteArticle } = useLibrary();
+  const [isEditing, setIsEditing] = useState(false);
 
   const isInProgress = article.progress !== undefined && !article.isRead;
   const isUnread = !article.isRead && article.progress === undefined;
@@ -187,6 +191,17 @@ export function ArticleCard({ article, onSelect }: { article: Article; onSelect?
                </span>
              </div>
            )}
+
+           {article.tags && article.tags.length > 0 && (
+             <div className="flex flex-wrap items-center justify-center gap-1.5 mt-3 w-full">
+               {article.tags.slice(0,2).map(tag => (
+                 <span key={tag} className="text-[7px] sm:text-[9px] uppercase tracking-wider bg-black/10 dark:bg-black/20 border border-black/10 dark:border-white/10 px-1.5 py-0.5 rounded-sm backdrop-blur-sm truncate max-w-full font-bold">
+                   {tag}
+                 </span>
+               ))}
+               {article.tags.length > 2 && <span className="text-[8px] opacity-60">+{article.tags.length - 2}</span>}
+             </div>
+           )}
         </div>
 
         {/* Status Indicators */}
@@ -250,6 +265,13 @@ export function ArticleCard({ article, onSelect }: { article: Article; onSelect?
             )}
 
             <button 
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsEditing(true); }}
+              className="w-8 h-8 rounded-full bg-slate-800/80 text-white flex items-center justify-center shadow-sm hover:bg-slate-900 hover:scale-110 transition-transform border border-slate-700/20 backdrop-blur-sm"
+              title="Edit Article"
+            >
+              <Edit2 className="w-3.5 h-3.5" />
+            </button>
+            <button 
               onClick={handleDelete}
               className="w-8 h-8 rounded-full bg-red-500/80 text-white flex items-center justify-center shadow-sm hover:bg-red-600 hover:scale-110 transition-transform border border-red-500/20 backdrop-blur-sm"
               title="Delete Article"
@@ -267,6 +289,7 @@ export function ArticleCard({ article, onSelect }: { article: Article; onSelect?
   };
 
   return (
+    <>
     <div
       role={article.url ? 'button' : undefined}
       tabIndex={article.url ? 0 : undefined}
@@ -276,5 +299,7 @@ export function ArticleCard({ article, onSelect }: { article: Article; onSelect?
     >
       {CardInner}
     </div>
+    {isEditing && <EditArticleDialog article={article} onClose={() => setIsEditing(false)} />}
+    </>
   );
 }

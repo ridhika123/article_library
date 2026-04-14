@@ -6,7 +6,18 @@ import { useLibrary } from "./LibraryContext";
 import { AddArticleDialog } from "./AddArticleDialog";
 
 export function Sidebar({ className }: { className?: string }) {
-  const { addArticle, sources, filterState, setFilterState } = useLibrary();
+  const { addArticle, sources, uniqueTags, filterState, setFilterState } = useLibrary();
+
+  const toggleTag = (tag: string) => {
+    setFilterState(prev => {
+      const isSelected = prev.tags.includes(tag);
+      if (isSelected) {
+        return { ...prev, tags: prev.tags.filter(t => t !== tag) };
+      } else {
+        return { ...prev, tags: [...prev.tags, tag] };
+      }
+    });
+  };
 
   const toggleSource = (source: string) => {
     setFilterState(prev => {
@@ -28,8 +39,6 @@ export function Sidebar({ className }: { className?: string }) {
     }
     return colors[Math.abs(hash) % colors.length];
   };
-
-  const dummyTags = ["design", "technology", "psychology", "startups", "productivity"];
 
   return (
     <aside className={`flex flex-col py-6 px-4 ${className || ""}`}>
@@ -77,20 +86,26 @@ export function Sidebar({ className }: { className?: string }) {
           </ul>
         </div>
 
-        {/* Tags Placeholder */}
-        <div>
+        {/* Tags */}
+        {uniqueTags.length > 0 && (
+        <div className="mt-8">
           <h3 className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 px-3">Tags</h3>
           <div className="flex flex-wrap gap-2 px-3">
-            {dummyTags.map(tag => (
-              <button key={tag} className="px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] font-semibold rounded-full bg-slate-100/80 border border-slate-200/60 shadow-sm dark:border-slate-700/50 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-700/80 text-slate-600 dark:text-slate-300 transition-all">
+            {uniqueTags.map(tag => {
+              const isSelected = filterState.tags.includes(tag);
+              return (
+              <button 
+                key={tag} 
+                onClick={() => toggleTag(tag)}
+                className={`px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] font-semibold rounded-full border shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all active:scale-95 ${isSelected ? 'bg-slate-900 border-slate-900 text-white dark:bg-slate-100 dark:border-slate-100 dark:text-slate-900' : 'bg-slate-50/80 border-slate-200/80 dark:border-slate-700/50 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-700 hover:shadow-md text-slate-600 dark:text-slate-300'}`}
+              >
                 {tag}
               </button>
-            ))}
-            <button className="px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] font-semibold rounded-full border border-dashed border-slate-300 dark:border-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
-              + New
-            </button>
+              );
+            })}
           </div>
         </div>
+        )}
         
       </nav>
 

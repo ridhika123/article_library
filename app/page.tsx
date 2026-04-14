@@ -5,24 +5,29 @@ import { ArticleGrid } from "@/components/ArticleGrid";
 import { useLibrary } from "@/components/LibraryContext";
 import { ReaderSheet } from "@/components/reader/ReaderSheet";
 import { Article } from "@/components/ArticleCard";
-import { Filter, ChevronDown, Check } from "lucide-react";
+import { Filter, ChevronDown, Check, Calendar } from "lucide-react";
 
 export default function Home() {
   const { articles, filterState, setFilterState } = useLibrary();
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [activeTab, setActiveTab] = useState<'queue' | 'bookshelf'>('queue');
   const [isStatusMenuOpen, setIsStatusMenuOpen] = useState(false);
+  const [isDateMenuOpen, setIsDateMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const dateMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setIsStatusMenuOpen(false);
       }
+      if (dateMenuRef.current && !dateMenuRef.current.contains(event.target as Node)) {
+        setIsDateMenuOpen(false);
+      }
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [menuRef]);
+  }, [menuRef, dateMenuRef]);
 
   const toggleStatus = (status: 'unread' | 'in-progress' | 'finished') => {
     setFilterState(prev => {
@@ -33,6 +38,11 @@ export default function Home() {
         return { ...prev, statuses: [...prev.statuses, status] };
       }
     });
+  };
+
+  const setDateRange = (range: 'all' | 'week' | 'month' | 'year') => {
+    setFilterState(prev => ({ ...prev, dateRange: range }));
+    setIsDateMenuOpen(false);
   };
 
   const passesFilters = (a: any) => {
@@ -52,7 +62,23 @@ export default function Home() {
       if (a.source && filterState.sources.includes(a.source)) passSource = true;
     }
 
-    return passStatus && passSource;
+    let passTags = false;
+    if (filterState.tags.length === 0) {
+      passTags = true;
+    } else {
+      if (a.tags && filterState.tags.some((tag: string) => a.tags.includes(tag))) passTags = true;
+    }
+
+    let passDate = true;
+    if (filterState.dateRange !== 'all' && a.dateAdded) {
+      const added = new Date(a.dateAdded);
+      const now = new Date();
+      if (filterState.dateRange === 'week' && (now.getTime() - added.getTime() > 7 * 24 * 60 * 60 * 1000)) passDate = false;
+      if (filterState.dateRange === 'month' && (now.getTime() - added.getTime() > 30 * 24 * 60 * 60 * 1000)) passDate = false;
+      if (filterState.dateRange === 'year' && (now.getTime() - added.getTime() > 365 * 24 * 60 * 60 * 1000)) passDate = false;
+    }
+
+    return passStatus && passSource && passTags && passDate;
   };
 
   const displayedArticles = articles.filter(a => {
@@ -75,32 +101,62 @@ export default function Home() {
             {activeTab === 'queue' ? 'Queue' : 'Bookshelf'}
           </h1>
           
-          <div className="relative" ref={menuRef}>
-            <button 
-              onClick={() => setIsStatusMenuOpen(!isStatusMenuOpen)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-black/50 shadow-sm text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors"
-            >
-              <Filter className="w-3.5 h-3.5 text-slate-500" />
-              <span>Status Filter {filterState.statuses.length > 0 && `(${filterState.statuses.length})`}</span>
-              <ChevronDown className="w-4 h-4 text-slate-400" />
-            </button>
+          <div className="flex items-center gap-3">
+            <div className="relative" ref={dateMenuRef}>
+              <button 
+                onClick={() => setIsDateMenuOpen(!isDateMenuOpen)}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-black/50 shadow-sm text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors"
+              >
+                <Calendar className="w-3.5 h-3.5 text-slate-500" />
+                <span className="capitalize">{filterState.dateRange === 'all' ? 'Any Time' : `Past ${filterState.dateRange}`}</span>
+                <ChevronDown className="w-4 h-4 text-slate-400" />
+              </button>
 
-            {isStatusMenuOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-[#1c1c1e] rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 p-1 z-50">
-                 <button onClick={() => toggleStatus('unread')} className="w-full flex items-center justify-between px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
-                   New
-                   {filterState.statuses.includes('unread') && <Check className="w-4 h-4 text-blue-500" />}
-                 </button>
-                 <button onClick={() => toggleStatus('in-progress')} className="w-full flex items-center justify-between px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
-                   In Progress
-                   {filterState.statuses.includes('in-progress') && <Check className="w-4 h-4 text-orange-500" />}
-                 </button>
-                 <button onClick={() => toggleStatus('finished')} className="w-full flex items-center justify-between px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
-                   Finished
-                   {filterState.statuses.includes('finished') && <Check className="w-4 h-4 text-green-500" />}
-                 </button>
-              </div>
-            )}
+              {isDateMenuOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-[#1c1c1e] rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 p-1 z-50">
+                   <button onClick={() => setDateRange('all')} className="w-full flex items-center justify-between px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+                     Any Time {filterState.dateRange === 'all' && <Check className="w-4 h-4 text-blue-500" />}
+                   </button>
+                   <button onClick={() => setDateRange('week')} className="w-full flex items-center justify-between px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+                     Past Week {filterState.dateRange === 'week' && <Check className="w-4 h-4 text-blue-500" />}
+                   </button>
+                   <button onClick={() => setDateRange('month')} className="w-full flex items-center justify-between px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+                     Past Month {filterState.dateRange === 'month' && <Check className="w-4 h-4 text-blue-500" />}
+                   </button>
+                   <button onClick={() => setDateRange('year')} className="w-full flex items-center justify-between px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+                     Past Year {filterState.dateRange === 'year' && <Check className="w-4 h-4 text-blue-500" />}
+                   </button>
+                </div>
+              )}
+            </div>
+
+            <div className="relative" ref={menuRef}>
+              <button 
+                onClick={() => setIsStatusMenuOpen(!isStatusMenuOpen)}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-black/50 shadow-sm text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors"
+              >
+                <Filter className="w-3.5 h-3.5 text-slate-500" />
+                <span>Status Filter {filterState.statuses.length > 0 && `(${filterState.statuses.length})`}</span>
+                <ChevronDown className="w-4 h-4 text-slate-400" />
+              </button>
+
+              {isStatusMenuOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-[#1c1c1e] rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 p-1 z-50">
+                   <button onClick={() => toggleStatus('unread')} className="w-full flex items-center justify-between px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+                     New
+                     {filterState.statuses.includes('unread') && <Check className="w-4 h-4 text-blue-500" />}
+                   </button>
+                   <button onClick={() => toggleStatus('in-progress')} className="w-full flex items-center justify-between px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+                     In Progress
+                     {filterState.statuses.includes('in-progress') && <Check className="w-4 h-4 text-orange-500" />}
+                   </button>
+                   <button onClick={() => toggleStatus('finished')} className="w-full flex items-center justify-between px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+                     Finished
+                     {filterState.statuses.includes('finished') && <Check className="w-4 h-4 text-green-500" />}
+                   </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

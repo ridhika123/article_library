@@ -8,6 +8,8 @@ export interface FilterState {
   collections: ('reading-list' | 'library')[];
   statuses: ('unread' | 'in-progress' | 'finished')[];
   sources: string[];
+  tags: string[];
+  dateRange: 'all' | 'week' | 'month' | 'year';
 }
 
 interface LibraryContextProps {
@@ -17,6 +19,7 @@ interface LibraryContextProps {
   deleteArticle: (id: string) => void;
   prefetchArticle: (article: Article) => void;
   sources: string[];
+  uniqueTags: string[];
   isLoaded: boolean;
   filterState: FilterState;
   setFilterState: React.Dispatch<React.SetStateAction<FilterState>>;
@@ -31,6 +34,8 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
     collections: ['reading-list', 'library'],
     statuses: [],
     sources: [],
+    tags: [],
+    dateRange: 'all',
   });
 
   // Load from Supabase on initial mount
@@ -94,8 +99,8 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
 
     if (finalUpdatedArticle) {
       // Create a mutable copy to manipulate before sending to Supabase
-      const updatePayload = { ...finalUpdatedArticle };
-      delete updatePayload.id; // avoid updating primary key
+      const updatePayload = { ...(finalUpdatedArticle as Article) };
+      delete (updatePayload as any).id; // avoid updating primary key
       
       const { error } = await supabase.from('articles').update(updatePayload).eq('id', id);
       if (error) {
@@ -146,8 +151,11 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
   // Derive unique sources from articles
   const sources = Array.from(new Set(articles.map(a => a.source).filter(Boolean))) as string[];
 
+  // Derive unique tags from articles
+  const uniqueTags = Array.from(new Set(articles.flatMap(a => a.tags || []))).filter(Boolean) as string[];
+
   return (
-    <LibraryContext.Provider value={{ articles, addArticle, updateArticle, deleteArticle, prefetchArticle, sources, isLoaded, filterState, setFilterState }}>
+    <LibraryContext.Provider value={{ articles, addArticle, updateArticle, deleteArticle, prefetchArticle, sources, uniqueTags, isLoaded, filterState, setFilterState }}>
       {isLoaded ? children : <div className="h-screen w-full flex items-center justify-center text-slate-400">Loading library...</div>}
     </LibraryContext.Provider>
   );
