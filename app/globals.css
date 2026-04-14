@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -128,3 +129,147 @@
     @apply font-sans;
   }
 }
+
+/* ─── Tier 1 Reader: .article-content ──────────────────────────────────────
+   Explicit scoped CSS so all Readability-extracted HTML renders correctly
+   regardless of Tailwind v4 prose modifier limitations.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+.article-content {
+  color: #374151;
+  font-size: 18px;
+  line-height: 1.85;
+}
+.dark .article-content { color: #d1d5db; }
+
+/* Paragraphs */
+.article-content p {
+  margin: 0 0 1.4em;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 18px;
+  line-height: 1.85;
+}
+
+/* Headings */
+.article-content h1, .article-content h2, .article-content h3,
+.article-content h4, .article-content h5, .article-content h6 {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.25;
+  margin: 2em 0 0.6em;
+}
+.dark .article-content h1, .dark .article-content h2, .dark .article-content h3,
+.dark .article-content h4, .dark .article-content h5, .dark .article-content h6 {
+  color: #f8fafc;
+}
+.article-content h1 { font-size: 2em; }
+.article-content h2 { font-size: 1.5em; }
+.article-content h3 { font-size: 1.25em; }
+.article-content h4 { font-size: 1.1em; }
+.article-content h5, .article-content h6 { font-size: 1em; font-weight: 600; }
+
+/* Images */
+.article-content img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 2em auto;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.10);
+}
+
+/* Figures & captions */
+.article-content figure { margin: 2em 0; }
+.article-content figcaption {
+  margin-top: 0.6em;
+  text-align: center;
+  font-size: 0.83em;
+  color: #9ca3af;
+  font-family: system-ui, sans-serif;
+  line-height: 1.5;
+}
+
+/* Blockquotes */
+.article-content blockquote {
+  border-left: 3px solid #60a5fa;
+  margin: 1.8em 0;
+  padding: 0.4em 0 0.4em 1.4em;
+  color: #6b7280;
+  font-style: italic;
+}
+.dark .article-content blockquote { color: #9ca3af; border-color: #3b82f6; }
+.article-content blockquote p { margin-bottom: 0; }
+
+/* Lists */
+.article-content ul { list-style-type: disc; margin: 1.2em 0 1.2em 1.6em; }
+.article-content ol { list-style-type: decimal; margin: 1.2em 0 1.2em 1.6em; }
+.article-content li {
+  margin-bottom: 0.4em;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 18px;
+  line-height: 1.75;
+}
+.article-content li > ul, .article-content li > ol { margin: 0.3em 0 0.3em 1.4em; }
+
+/* Links */
+.article-content a { color: #2563eb; text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.15s; }
+.article-content a:hover { border-bottom-color: #2563eb; }
+.dark .article-content a { color: #60a5fa; }
+.dark .article-content a:hover { border-bottom-color: #60a5fa; }
+
+/* Inline code */
+.article-content code {
+  font-family: 'Fira Code', 'Menlo', monospace;
+  font-size: 0.85em;
+  background: #f1f5f9;
+  color: #be185d;
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+}
+.dark .article-content code { background: rgba(255,255,255,0.07); color: #f472b6; }
+
+/* Code blocks */
+.article-content pre {
+  background: #1e293b;
+  color: #e2e8f0;
+  border-radius: 10px;
+  padding: 1.2em 1.4em;
+  overflow-x: auto;
+  margin: 1.8em 0;
+  font-size: 0.875em;
+  line-height: 1.7;
+}
+.article-content pre code { background: none; color: inherit; padding: 0; border-radius: 0; }
+
+/* Tables */
+.article-content table { width: 100%; border-collapse: collapse; margin: 1.8em 0; font-size: 0.9em; font-family: system-ui, sans-serif; }
+.article-content th { background: #f8fafc; font-weight: 600; text-align: left; padding: 0.7em 1em; border: 1px solid #e2e8f0; }
+.dark .article-content th { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); color: #e2e8f0; }
+.article-content td { padding: 0.65em 1em; border: 1px solid #e2e8f0; vertical-align: top; }
+.dark .article-content td { border-color: rgba(255,255,255,0.08); }
+.article-content tr:nth-child(even) td { background: #f8fafc; }
+.dark .article-content tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+
+/* HR */
+.article-content hr { border: none; border-top: 1px solid #e2e8f0; margin: 2.5em auto; width: 40%; }
+.dark .article-content hr { border-color: rgba(255,255,255,0.08); }
+
+/* Inline formatting */
+.article-content strong, .article-content b { font-weight: 700; }
+.article-content em, .article-content i { font-style: italic; }
+.article-content mark { background: #fef08a; color: #1e293b; padding: 0 0.2em; border-radius: 2px; }
+
+/* Superscript / subscript (Wikipedia footnotes etc.) */
+.article-content sup, .article-content sub { font-size: 0.72em; line-height: 0; position: relative; vertical-align: baseline; }
+.article-content sup { top: -0.5em; }
+.article-content sub { bottom: -0.25em; }
+
+/* Details / expandable sections */
+.article-content details { border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.6em 1em; margin: 1.2em 0; }
+.dark .article-content details { border-color: rgba(255,255,255,0.1); }
+.article-content summary { font-weight: 600; cursor: pointer; font-family: system-ui, sans-serif; font-size: 0.95em; }
+
+/* Lead — first paragraph slightly larger */
+.article-content > p:first-of-type { font-size: 1.06em; color: #4b5563; line-height: 1.8; }
+.dark .article-content > p:first-of-type { color: #9ca3af; }

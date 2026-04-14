@@ -1,65 +1,141 @@
-import Image from "next/image";
+"use client";
+
+import { useState, useRef, useEffect } from "react";
+import { ArticleGrid } from "@/components/ArticleGrid";
+import { useLibrary } from "@/components/LibraryContext";
+import { ReaderSheet } from "@/components/reader/ReaderSheet";
+import { Article } from "@/components/ArticleCard";
+import { Filter, ChevronDown, Check } from "lucide-react";
 
 export default function Home() {
+  const { articles, filterState, setFilterState } = useLibrary();
+  const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
+  const [activeTab, setActiveTab] = useState<'queue' | 'bookshelf'>('queue');
+  const [isStatusMenuOpen, setIsStatusMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsStatusMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [menuRef]);
+
+  const toggleStatus = (status: 'unread' | 'in-progress' | 'finished') => {
+    setFilterState(prev => {
+      const isSelected = prev.statuses.includes(status);
+      if (isSelected) {
+        return { ...prev, statuses: prev.statuses.filter(s => s !== status) };
+      } else {
+        return { ...prev, statuses: [...prev.statuses, status] };
+      }
+    });
+  };
+
+  const passesFilters = (a: any) => {
+    let passStatus = false;
+    if (filterState.statuses.length === 0) {
+      passStatus = true;
+    } else {
+      if (filterState.statuses.includes('unread') && !a.isRead && a.progress === undefined) passStatus = true;
+      if (filterState.statuses.includes('in-progress') && !a.isRead && a.progress !== undefined) passStatus = true;
+      if (filterState.statuses.includes('finished') && a.isRead) passStatus = true;
+    }
+    
+    let passSource = false;
+    if (filterState.sources.length === 0) {
+      passSource = true;
+    } else {
+      if (a.source && filterState.sources.includes(a.source)) passSource = true;
+    }
+
+    return passStatus && passSource;
+  };
+
+  const displayedArticles = articles.filter(a => {
+    // Determine which collection it belongs to
+    const isQueue = a.collection === 'reading-list' || (!a.collection && !a.isRead);
+    const isBookshelf = a.collection === 'library' || (!a.collection && a.isRead);
+    
+    if (activeTab === 'queue' && !isQueue) return false;
+    if (activeTab === 'bookshelf' && !isBookshelf) return false;
+    
+    return passesFilters(a);
+  });
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="flex flex-col flex-1 h-full font-sans pb-12 relative min-h-screen">
+      <header className="sticky top-0 z-40 bg-[#f2f2f7]/80 dark:bg-[#0a0a0a]/80 backdrop-blur-2xl border-b border-[#e5e5ea]/80 dark:border-white/10 transition-all">
+        {/* Top Header Row */}
+        <div className="flex justify-between items-center px-8 pt-8 pb-3">
+          <h1 className="text-[28px] font-semibold tracking-tight text-slate-800 dark:text-slate-100 font-serif">
+            {activeTab === 'queue' ? 'Queue' : 'Bookshelf'}
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+          
+          <div className="relative" ref={menuRef}>
+            <button 
+              onClick={() => setIsStatusMenuOpen(!isStatusMenuOpen)}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-black/50 shadow-sm text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+              <Filter className="w-3.5 h-3.5 text-slate-500" />
+              <span>Status Filter {filterState.statuses.length > 0 && `(${filterState.statuses.length})`}</span>
+              <ChevronDown className="w-4 h-4 text-slate-400" />
+            </button>
+
+            {isStatusMenuOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-[#1c1c1e] rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 p-1 z-50">
+                 <button onClick={() => toggleStatus('unread')} className="w-full flex items-center justify-between px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+                   New
+                   {filterState.statuses.includes('unread') && <Check className="w-4 h-4 text-blue-500" />}
+                 </button>
+                 <button onClick={() => toggleStatus('in-progress')} className="w-full flex items-center justify-between px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+                   In Progress
+                   {filterState.statuses.includes('in-progress') && <Check className="w-4 h-4 text-orange-500" />}
+                 </button>
+                 <button onClick={() => toggleStatus('finished')} className="w-full flex items-center justify-between px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+                   Finished
+                   {filterState.statuses.includes('finished') && <Check className="w-4 h-4 text-green-500" />}
+                 </button>
+              </div>
+            )}
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+
+        {/* Tab Row */}
+        <div className="flex gap-6 px-8">
+          <button 
+            onClick={() => setActiveTab('queue')}
+            className={`pb-3 text-sm font-semibold transition-colors border-b-2 ${activeTab === 'queue' ? 'border-slate-900 text-slate-900 dark:border-white dark:text-white' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            Queue
+          </button>
+          <button 
+            onClick={() => setActiveTab('bookshelf')}
+            className={`pb-3 text-sm font-semibold transition-colors border-b-2 ${activeTab === 'bookshelf' ? 'border-slate-900 text-slate-900 dark:border-white dark:text-white' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
           >
-            Documentation
-          </a>
+            Bookshelf
+          </button>
         </div>
+      </header>
+
+      <main className="flex-1 w-full px-8 py-8">
+        {displayedArticles.length > 0 ? (
+          <ArticleGrid articles={displayedArticles} onSelect={setSelectedArticle} />
+        ) : (
+          <div className="text-center py-20 text-slate-500 border border-dashed rounded-2xl border-slate-300 dark:border-slate-700">
+            <p>Nothing found here.</p>
+          </div>
+        )}
       </main>
+
+      {/* In-app browser sheet — slides up over the library, no navigation */}
+      <ReaderSheet
+        article={selectedArticle}
+        onClose={() => setSelectedArticle(null)}
+      />
     </div>
   );
 }
