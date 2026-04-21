@@ -49,13 +49,14 @@ export function ReaderSheet({ article, onClose }: ReaderSheetProps) {
   // Legacy & False-Negative Self-Healing Detection
   // Runs extremely fast just-in-time check when an article is opened
   useEffect(() => {
-    if (!article?.url) return;
+    const targetUrl = article?.url;
+    if (!targetUrl) return;
     if (article.cachedContent?.iframeBlocked === true) return;
 
     let isMounted = true;
     const verifyIframeStatus = async () => {
       try {
-        const res = await fetch(`/api/extract?url=${encodeURIComponent(article.url)}&checkOnly=true`);
+        const res = await fetch(`/api/extract?url=${encodeURIComponent(targetUrl)}&checkOnly=true`);
         const data = await res.json().catch(() => null);
         if (isMounted && data?.iframeBlocked) {
           setBlocked(true);
