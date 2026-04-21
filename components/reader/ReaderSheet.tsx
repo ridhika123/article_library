@@ -46,6 +46,27 @@ export function ReaderSheet({ article, onClose }: ReaderSheetProps) {
     return () => document.removeEventListener('keydown', fn);
   }, [onClose]);
 
+  // Legacy & False-Negative Self-Healing Detection
+  // Runs extremely fast just-in-time check when an article is opened
+  useEffect(() => {
+    if (!article?.url) return;
+    if (article.cachedContent?.iframeBlocked === true) return;
+
+    let isMounted = true;
+    const verifyIframeStatus = async () => {
+      try {
+        const res = await fetch(`/api/extract?url=${encodeURIComponent(article.url)}&checkOnly=true`);
+        const data = await res.json().catch(() => null);
+        if (isMounted && data?.iframeBlocked) {
+          setBlocked(true);
+        }
+      } catch (e) {}
+    };
+    verifyIframeStatus();
+
+    return () => { isMounted = false; };
+  }, [article?.url, reloadKey]);
+
   // Safety timeout — only triggers if iframe never fires onLoad or onError
   useEffect(() => {
     if (!loading) return;

@@ -57,13 +57,17 @@ export function AddArticleDialog({ onAdd, children }: AddArticleDialogProps) {
       let source = "Web";
       let category = "Uncategorized";
       let iframeBlocked = false;
+      let data = null;
+      try { data = await res.json(); } catch (e) {}
 
-      if (res.ok) {
-        const data = await res.json();
+      if (data && data.iframeBlocked) {
+        iframeBlocked = true;
+      }
+
+      if (res.ok && data) {
         if (data.title) title = data.title;
         if (data.byline) author = data.byline;
         if (data.siteName) source = data.siteName;
-        if (data.iframeBlocked) iframeBlocked = true;
       } else {
         try {
           source = new URL(finalUrl).hostname.replace('www.', '');

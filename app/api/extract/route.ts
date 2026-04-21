@@ -32,6 +32,7 @@ function makeUrlsAbsolute(html: string, baseUrl: string): string {
 
 export async function GET(request: NextRequest) {
   const url = request.nextUrl.searchParams.get('url');
+  const checkOnly = request.nextUrl.searchParams.get('checkOnly') === 'true';
 
   if (!url) {
     return NextResponse.json({ error: 'URL parameter is required' }, { status: 400 });
@@ -43,19 +44,26 @@ export async function GET(request: NextRequest) {
       redirect: 'follow',
     });
 
-    if (!response.ok) {
-      return NextResponse.json({ error: `Failed to fetch URL: ${response.statusText}` }, { status: response.status });
-    }
-
     let iframeBlocked = false;
     const xFrameOptions = response.headers.get('x-frame-options');
     const csp = response.headers.get('content-security-policy');
     
-    if (xFrameOptions && ['deny', 'sameorigin'].includes(xFrameOptions.toLowerCase())) {
+    if (xFrameOptions && ['deny', 'sameorigin'].includes(xFrameOptions.toLowerCase().trim())) {
       iframeBlocked = true;
     }
     if (csp && csp.toLowerCase().includes('frame-ancestors')) {
       iframeBlocked = true;
+    }
+
+    if (!response.ok) {
+      return NextResponse.json({ 
+        error: `Failed to fetch URL: ${response.statusText}`,
+        iframeBlocked
+      }, { status: response.status });
+    }
+
+    if (checkOnly) {
+      return NextResponse.json({ iframeBlocked });
     }
 
     const html = await response.text();
