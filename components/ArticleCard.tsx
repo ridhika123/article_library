@@ -13,6 +13,7 @@ export interface ExtractedArticle {
   excerpt?: string;
   siteName?: string;
   length?: number;
+  iframeBlocked?: boolean;
 }
 
 export interface XOEmbedData {

@@ -47,6 +47,17 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: `Failed to fetch URL: ${response.statusText}` }, { status: response.status });
     }
 
+    let iframeBlocked = false;
+    const xFrameOptions = response.headers.get('x-frame-options');
+    const csp = response.headers.get('content-security-policy');
+    
+    if (xFrameOptions && ['deny', 'sameorigin'].includes(xFrameOptions.toLowerCase())) {
+      iframeBlocked = true;
+    }
+    if (csp && csp.toLowerCase().includes('frame-ancestors')) {
+      iframeBlocked = true;
+    }
+
     const html = await response.text();
 
     // Scrape OG tags
@@ -123,6 +134,7 @@ export async function GET(request: NextRequest) {
       siteName: article.siteName,
       ogImage,
       ogDescription,
+      iframeBlocked,
     });
 
   } catch (error: any) {

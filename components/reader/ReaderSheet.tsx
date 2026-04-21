@@ -27,8 +27,9 @@ export function ReaderSheet({ article, onClose }: ReaderSheetProps) {
   const [prevArticleId, setPrevArticleId] = useState(article?.id);
   if (article?.id !== prevArticleId) {
     setPrevArticleId(article?.id);
-    setLoading(true);
-    setBlocked(false);
+    const isBlocked = article?.cachedContent?.iframeBlocked === true;
+    setLoading(!isBlocked);
+    setBlocked(isBlocked);
     setReloadKey(k => k + 1);
   }
 
@@ -72,8 +73,9 @@ export function ReaderSheet({ article, onClose }: ReaderSheetProps) {
   };
 
   const reload = () => {
-    setLoading(true);
-    setBlocked(false);
+    const isBlocked = article?.cachedContent?.iframeBlocked === true;
+    setLoading(!isBlocked);
+    setBlocked(isBlocked);
     setReloadKey(k => k + 1);
   };
 
@@ -196,7 +198,7 @@ export function ReaderSheet({ article, onClose }: ReaderSheetProps) {
               )}
 
               {/* Iframe — always show after load; ↗ button is the escape hatch for blocked sites */}
-              {article?.url && (
+              {article?.url && !article.cachedContent?.iframeBlocked && (
                 <iframe
                   key={reloadKey}
                   ref={iframeRef}

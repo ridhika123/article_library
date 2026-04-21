@@ -55,12 +55,14 @@ export function AddArticleDialog({ onAdd }: AddArticleDialogProps) {
       let author = "Unknown Author";
       let source = "Web";
       let category = "Uncategorized";
+      let iframeBlocked = false;
 
       if (res.ok) {
         const data = await res.json();
         if (data.title) title = data.title;
         if (data.byline) author = data.byline;
         if (data.siteName) source = data.siteName;
+        if (data.iframeBlocked) iframeBlocked = true;
       } else {
         try {
           source = new URL(finalUrl).hostname.replace('www.', '');
@@ -80,6 +82,7 @@ export function AddArticleDialog({ onAdd }: AddArticleDialogProps) {
         collection,
         tags,
         dateAdded: new Date().toISOString(),
+        cachedContent: { iframeBlocked }
       };
 
       onAdd(newArticle);
