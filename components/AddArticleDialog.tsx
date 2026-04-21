@@ -11,9 +11,10 @@ import { useLibrary } from "@/components/LibraryContext";
 
 interface AddArticleDialogProps {
   onAdd: (article: Article) => void;
+  children?: React.ReactNode;
 }
 
-export function AddArticleDialog({ onAdd }: AddArticleDialogProps) {
+export function AddArticleDialog({ onAdd, children }: AddArticleDialogProps) {
   const { prefetchArticle, uniqueTags } = useLibrary();
   const [open, setOpen] = useState(false);
   const [url, setUrl] = useState("");
@@ -101,10 +102,14 @@ export function AddArticleDialog({ onAdd }: AddArticleDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger className="h-12 px-5 bg-white dark:bg-[#1c1c1e] shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-full flex items-center justify-center gap-2 border border-slate-200/50 dark:border-white/10 hover:shadow-[0_12px_40px_rgb(0,0,0,0.16)] hover:scale-[1.02] active:scale-95 transition-all text-slate-800 dark:text-slate-100 font-medium">
-         <Plus className="w-5 h-5 stroke-[2]" />
-         <span>Add to Shelf</span>
-      </DialogTrigger>
+      {children ? (
+        <DialogTrigger render={children as any} />
+      ) : (
+        <DialogTrigger className="h-12 px-5 bg-white dark:bg-[#1c1c1e] shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-full flex items-center justify-center gap-2 border border-slate-200/50 dark:border-white/10 hover:shadow-[0_12px_40px_rgb(0,0,0,0.16)] hover:scale-[1.02] active:scale-95 transition-all text-slate-800 dark:text-slate-100 font-medium">
+           <Plus className="w-5 h-5 stroke-[2]" />
+           <span>Add to Shelf</span>
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-md bg-[#fdfdfd] dark:bg-[#1c1c1e] border border-[#e5e5ea] dark:border-white/10 rounded-2xl shadow-2xl p-6">
         <DialogHeader>
           <DialogTitle className="text-xl font-medium tracking-tight text-slate-900 dark:text-slate-100 font-serif">Add to library</DialogTitle>

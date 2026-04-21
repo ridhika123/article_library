@@ -6,11 +6,12 @@ import { ArticleList } from "@/components/ArticleList";
 import { useLibrary } from "@/components/LibraryContext";
 import { ReaderSheet } from "@/components/reader/ReaderSheet";
 import { Article } from "@/components/ArticleCard";
-import { Filter, ChevronDown, Check, Calendar, ChevronLeft } from "lucide-react";
+import { Filter, ChevronDown, Check, Calendar, ChevronLeft, Plus } from "lucide-react";
 import { BookCard } from "@/components/BookCard";
+import { AddArticleDialog } from "@/components/AddArticleDialog";
 
 export default function Home() {
-  const { articles, filterState, setFilterState, uniqueTags, activeBook, setActiveBook } = useLibrary();
+  const { articles, filterState, setFilterState, uniqueTags, activeBook, setActiveBook, addArticle } = useLibrary();
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [isStatusMenuOpen, setIsStatusMenuOpen] = useState(false);
   const [isDateMenuOpen, setIsDateMenuOpen] = useState(false);
@@ -127,23 +128,23 @@ export default function Home() {
     <div className="flex flex-col flex-1 h-full font-sans pb-12 relative min-h-screen">
       <header className="sticky top-0 z-40 bg-[#f2f2f7]/80 dark:bg-[#0a0a0a]/80 backdrop-blur-2xl border-b border-[#e5e5ea]/80 dark:border-white/10 transition-all">
         {/* Top Header Row */}
-        <div className="flex justify-between items-center px-8 py-5">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center px-4 md:px-8 py-4 gap-4 sm:gap-0">
+          <div className="flex items-center gap-3 md:gap-4 shrink-0 max-w-full">
             {activeBook ? (
               <button 
                 onClick={() => setActiveBook(null)}
-                className="w-10 h-10 flex items-center justify-center rounded-full bg-white dark:bg-black/50 border border-slate-200 dark:border-slate-800 shadow-sm hover:scale-105 transition-transform"
+                className="w-9 h-9 md:w-10 md:h-10 flex shrink-0 items-center justify-center rounded-full bg-white dark:bg-black/50 border border-slate-200 dark:border-slate-800 shadow-sm hover:scale-105 transition-transform"
                 title="Back to Library"
               >
                 <ChevronLeft className="w-5 h-5 text-slate-700 dark:text-slate-300 pr-0.5" />
               </button>
             ) : null}
-            <h1 className="text-[28px] font-semibold tracking-tight text-slate-800 dark:text-slate-100 font-serif">
+            <h1 className="text-[24px] md:text-[28px] font-semibold tracking-tight text-slate-800 dark:text-slate-100 font-serif truncate">
               {activeBook ? activeBook : 'Library'}
             </h1>
           </div>
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 hide-scrollbar shrink-0">
             <div className="relative" ref={dateMenuRef}>
               <button 
                 onClick={() => setIsDateMenuOpen(!isDateMenuOpen)}
@@ -205,7 +206,7 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="flex-1 w-full px-8 py-8">
+      <main className="flex-1 w-full px-4 md:px-8 py-6 md:py-8">
         {!activeBook ? (
            // Root Library View (Books)
            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-x-6 gap-y-10">
@@ -245,6 +246,15 @@ export default function Home() {
            )
         )}
       </main>
+
+      {/* Mobile Floating Action Button */}
+      <div className="md:hidden fixed bottom-6 right-6 z-50">
+        <AddArticleDialog onAdd={addArticle}>
+          <button className="w-14 h-14 bg-slate-900 border-2 border-white/20 dark:bg-white text-white dark:text-slate-900 rounded-full flex items-center justify-center shadow-[0_8px_30px_rgb(0,0,0,0.2)] hover:scale-105 active:scale-95 transition-transform">
+            <Plus className="w-6 h-6 stroke-[2]" />
+          </button>
+        </AddArticleDialog>
+      </div>
 
       {/* In-app browser sheet — slides up over the library, no navigation */}
       <ReaderSheet
