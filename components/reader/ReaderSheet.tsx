@@ -57,11 +57,21 @@ export function ReaderSheet({ article, onClose }: ReaderSheetProps) {
     const verifyIframeStatus = async () => {
       try {
         const res = await fetch(`/api/extract?url=${encodeURIComponent(targetUrl)}&checkOnly=true`);
+        
+        // If the backend scraper completely failed (e.g., Cloudflare WAF 403, 500 error), 
+        // aggressively assume it blocks iframes.
+        if (!res.ok) {
+          if (isMounted) setBlocked(true);
+          return;
+        }
+
         const data = await res.json().catch(() => null);
         if (isMounted && data?.iframeBlocked) {
           setBlocked(true);
         }
-      } catch (e) {}
+      } catch (e) {
+        if (isMounted) setBlocked(true);
+      }
     };
     verifyIframeStatus();
 
