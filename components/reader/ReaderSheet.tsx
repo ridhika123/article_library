@@ -220,7 +220,7 @@ export function ReaderSheet({ article, onClose }: ReaderSheetProps) {
               )}
 
               {/* Iframe — always show after load; ↗ button is the escape hatch for blocked sites */}
-              {article?.url && !article.cachedContent?.iframeBlocked && (
+              {article?.url && !blocked && (
                 <iframe
                   key={reloadKey}
                   ref={iframeRef}
