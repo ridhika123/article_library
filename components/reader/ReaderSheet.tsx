@@ -24,13 +24,13 @@ export function ReaderSheet({ article, onClose }: ReaderSheetProps) {
   })();
 
   // Reset on new article
-  useEffect(() => {
-    if (article) {
-      setLoading(true);
-      setBlocked(false);
-      setReloadKey(k => k + 1);
-    }
-  }, [article?.id]);
+  const [prevArticleId, setPrevArticleId] = useState(article?.id);
+  if (article?.id !== prevArticleId) {
+    setPrevArticleId(article?.id);
+    setLoading(true);
+    setBlocked(false);
+    setReloadKey(k => k + 1);
+  }
 
   // Body scroll lock
   useEffect(() => {
@@ -179,7 +179,7 @@ export function ReaderSheet({ article, onClose }: ReaderSheetProps) {
                     </h3>
                     <p className="text-[13px] text-slate-400">{domain}</p>
                     <p className="text-[12px] text-slate-300 dark:text-slate-600 mt-1">
-                      Couldn't load this page.
+                      Couldn&apos;t load this page.
                     </p>
                   </div>
                   <div className="w-full max-w-[260px] space-y-3">

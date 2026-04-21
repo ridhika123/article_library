@@ -1,22 +1,19 @@
 "use client";
 
-import { Clock, CheckCircle2, Bookmark, Flame, Infinity, Database, Briefcase, User, Settings, Layers, Library, Hash } from "lucide-react";
+import { Clock, CheckCircle2, Bookmark, Flame, Infinity, Database, Briefcase, User, Settings, Layers, Library, Hash, LogOut } from "lucide-react";
 import Link from "next/link";
 import { useLibrary } from "./LibraryContext";
 import { AddArticleDialog } from "./AddArticleDialog";
 
 export function Sidebar({ className }: { className?: string }) {
-  const { addArticle, sources, uniqueTags, filterState, setFilterState } = useLibrary();
+  const { addArticle, sources, uniqueTags, filterState, setFilterState, username, logout, activeBook, setActiveBook } = useLibrary();
 
   const toggleTag = (tag: string) => {
-    setFilterState(prev => {
-      const isSelected = prev.tags.includes(tag);
-      if (isSelected) {
-        return { ...prev, tags: prev.tags.filter(t => t !== tag) };
-      } else {
-        return { ...prev, tags: [...prev.tags, tag] };
-      }
-    });
+    if (activeBook === tag) {
+      setActiveBook(null);
+    } else {
+      setActiveBook(tag);
+    }
   };
 
   const toggleSource = (source: string) => {
@@ -86,13 +83,13 @@ export function Sidebar({ className }: { className?: string }) {
           </ul>
         </div>
 
-        {/* Tags */}
+        {/* Folders */}
         {uniqueTags.length > 0 && (
         <div className="mt-8">
-          <h3 className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 px-3">Tags</h3>
+          <h3 className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 px-3">Folders</h3>
           <div className="flex flex-wrap gap-2 px-3">
             {uniqueTags.map(tag => {
-              const isSelected = filterState.tags.includes(tag);
+              const isSelected = activeBook === tag;
               return (
               <button 
                 key={tag} 
@@ -109,11 +106,23 @@ export function Sidebar({ className }: { className?: string }) {
         
       </nav>
 
-      <div className="mt-4 pt-4 border-t border-[#e5e5ea]/80 dark:border-slate-800">
+      <div className="mt-4 pt-4 border-t border-[#e5e5ea]/80 dark:border-slate-800 space-y-1">
         <Link href="#" className="flex items-center gap-3 px-3 py-2 text-[14px] font-medium rounded-lg hover:bg-[#e5e5ea]/50 dark:hover:bg-slate-800/50 text-slate-700 dark:text-slate-300 transition-colors">
           <Settings className="w-4 h-4" />
           Settings
         </Link>
+        <button 
+           onClick={logout}
+           className="w-full flex items-center justify-between px-3 py-2 text-[14px] font-medium rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 text-slate-700 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <div className="w-5 h-5 flex items-center justify-center bg-slate-200 dark:bg-slate-700 rounded-full text-[10px] font-bold text-slate-600 dark:text-slate-300">
+               {username?.charAt(0).toUpperCase()}
+            </div>
+            <span className="truncate max-w-[100px] text-sm">@{username}</span>
+          </div>
+          <LogOut className="w-3.5 h-3.5 opacity-50" />
+        </button>
       </div>
     </aside>
   );

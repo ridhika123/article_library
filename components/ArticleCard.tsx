@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { Check, Trash2, Clock, RotateCcw, Play, Edit2 } from "lucide-react";
+import { Check, Trash2, Clock, RotateCcw, Play, Edit2, CheckCircle2, Circle } from "lucide-react";
 import { useLibrary } from "./LibraryContext";
 import { useState } from "react";
 import { EditArticleDialog } from "./EditArticleDialog";
@@ -82,6 +82,7 @@ export function ArticleCard({ article, onSelect }: { article: Article; onSelect?
 
   const isInProgress = article.progress !== undefined && !article.isRead;
   const isUnread = !article.isRead && article.progress === undefined;
+  const isQueue = article.collection === 'reading-list';
   
   const displaySource = article.source?.replace(' (formerly Twitter)', '');
   const coverTheme = getCoverTheme(displaySource || article.title);
@@ -98,10 +99,14 @@ export function ArticleCard({ article, onSelect }: { article: Article; onSelect?
     updateArticle(article.id, { isRead: false, progress: 5 });
   };
 
-  const handleMarkAsUnread = (e: React.MouseEvent) => {
+  const handleToggleRead = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    updateArticle(article.id, { isRead: false, progress: undefined, collection: 'reading-list' });
+    if (article.isRead) {
+       updateArticle(article.id, { isRead: false, progress: undefined, collection: 'reading-list' });
+    } else {
+       updateArticle(article.id, { isRead: true, progress: undefined, collection: 'library' });
+    }
   };
 
   const handleDelete = (e: React.MouseEvent) => {
@@ -211,19 +216,10 @@ export function ArticleCard({ article, onSelect }: { article: Article; onSelect?
           )}
         </div>
 
-        {/* Progress bar inside book bottom */}
-        {isInProgress && (
-          <div className="absolute bottom-0 left-[24px] right-0 h-[4px] bg-black/10 dark:bg-white/10 z-20">
-             <div 
-               className="h-full bg-current opacity-80 transition-all duration-500 ease-in-out relative" 
-               style={{ width: `${article.progress}%` }} 
-             />
-          </div>
-        )}
 
-        {/* Hover Actions */}
-        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30 pointer-events-none rounded-xl overflow-hidden">
-          <div className="absolute inset-0 bg-black/50 dark:bg-black/70" />
+        {/* Hover Actions (Always visible on mobile without dark backdrop) */}
+        <div className="absolute inset-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 z-30 pointer-events-none rounded-xl overflow-hidden">
+          <div className="absolute inset-0 bg-transparent md:bg-black/50 md:dark:bg-black/70 transition-colors" />
           
           <div className="absolute bottom-5 left-[clamp(20px,8cqw,32px)] z-40 flex flex-col justify-start items-start gap-0.5 pointer-events-auto">
             <span className="text-[9px] uppercase tracking-widest text-white/60 font-bold">Status</span>
@@ -233,37 +229,6 @@ export function ArticleCard({ article, onSelect }: { article: Article; onSelect?
           </div>
 
           <div className="absolute top-3 right-3 z-40 flex flex-col items-center gap-2.5 pointer-events-auto">
-            
-            {!article.isRead && (
-              <button 
-                onClick={handleMarkAsRead}
-                className="w-8 h-8 rounded-full bg-white text-slate-900 flex items-center justify-center shadow-lg hover:bg-slate-100 hover:scale-110 transition-transform font-medium"
-                title="Finish & Save to Bookshelf"
-              >
-                <Check className="w-4 h-4 text-green-600 stroke-[3]" />
-              </button>
-            )}
-
-            {isUnread && (
-               <button 
-                onClick={handleMarkAsInProgress}
-                className="w-8 h-8 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/30 hover:scale-110 transition-transform border border-white/20 backdrop-blur-sm shadow-sm"
-                title="Start Reading"
-              >
-                <Play className="w-3.5 h-3.5 translate-x-[1px]" />
-              </button>
-            )}
-
-            {article.isRead && (
-               <button 
-                onClick={handleMarkAsUnread}
-                className="w-8 h-8 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/30 hover:scale-110 transition-transform border border-white/20 backdrop-blur-sm shadow-sm"
-                title="Mark as Unread"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-              </button>
-            )}
-
             <button 
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsEditing(true); }}
               className="w-8 h-8 rounded-full bg-slate-800/80 text-white flex items-center justify-center shadow-sm hover:bg-slate-900 hover:scale-110 transition-transform border border-slate-700/20 backdrop-blur-sm"
@@ -271,6 +236,24 @@ export function ArticleCard({ article, onSelect }: { article: Article; onSelect?
             >
               <Edit2 className="w-3.5 h-3.5" />
             </button>
+            <button 
+                onClick={handleMarkAsInProgress}
+                className="w-8 h-8 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/30 hover:scale-110 transition-transform border border-white/20 backdrop-blur-sm shadow-sm"
+                title="Start Reading"
+              >
+                <Play className="w-3.5 h-3.5 translate-x-[1px]" />
+            </button>
+            <button 
+                onClick={handleToggleRead}
+                className={`w-8 h-8 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform font-medium ${article.isRead ? 'bg-white text-green-600' : 'bg-white/10 text-white backdrop-blur-sm border border-white/20'}`}
+                title={article.isRead ? "Mark as Unread" : "Mark as Finished"}
+              >
+                <Check className="w-4 h-4 stroke-[3]" />
+            </button>
+          </div>
+
+          {/* Delete Action placed at bottom right */}
+          <div className="absolute bottom-3 right-3 z-40 flex flex-col items-center gap-2.5 pointer-events-auto">
             <button 
               onClick={handleDelete}
               className="w-8 h-8 rounded-full bg-red-500/80 text-white flex items-center justify-center shadow-sm hover:bg-red-600 hover:scale-110 transition-transform border border-red-500/20 backdrop-blur-sm"
