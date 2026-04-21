@@ -188,7 +188,7 @@ export function ReaderSheet({ article, onClose }: ReaderSheetProps) {
                     <button onClick={openPopup}
                       className="w-full py-3 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[14px] font-semibold hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors flex items-center justify-center gap-2">
                       <ExternalLink className="w-4 h-4" />
-                      Open {domain}
+                      Open external browser
                     </button>
                     <p className="text-center text-[11px] text-slate-400 dark:text-slate-600">
                       Opens a popup — close it to return here
